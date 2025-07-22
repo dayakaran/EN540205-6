@@ -9,25 +9,25 @@ import seaborn as sns
 import warnings
 warnings.filterwarnings('ignore')
 
-sns.set_context('notebook')
+sns.set_context("notebook", font_scale=1.5, rc={"lines.linewidth": 2.5})
 
 # Set up the differential equation: dp/dt = 0.5*p - 450
 def analytical_solution(t, p0, r=0.5, k=450):
-    """
+    '''
     Analytical solution to dp/dt = r*p - k
     Solution: p(t) = (p0 - k/r) * exp(r*t) + k/r
-    """
+    '''
     equilibrium = k / r  # 450 / 0.5 = 900
     return (p0 - equilibrium) * np.exp(r * t) + equilibrium
 
 def create_diff_eq_demo():
-    """Create interactive demo for the differential equation"""
+    '''Create interactive demo for the differential equation'''
     
     # Create widgets
     p0_slider = widgets.FloatSlider(value=1000, min=890, max=910, step=1,
                                     description='Initial Value (p₀):', style={'description_width': 'initial'},
                                     layout=widgets.Layout(width='400px'))
-        
+    
     show_equilibrium = widgets.Checkbox(value=True, description='Show Equilibrium Line',
                                         style={'description_width': 'initial'})
     
@@ -64,7 +64,6 @@ def create_diff_eq_demo():
             
             # Show equilibrium line
             if show_eq:
-                
                 equilibrium = 900  # 450/0.5
                 ax.axhline(y=equilibrium, color='r', linestyle='--', alpha=0.7, 
                           label=f'Equilibrium: p = {equilibrium}')
@@ -89,9 +88,10 @@ def create_diff_eq_demo():
                 dx_norm = dx / magnitude
                 dy_norm = dy / magnitude
 
-                aspect = ax.get_data_ratio()
-                
-                ax.quiver(T, P, dx_norm, dy_norm, magnitude, cmap = 'RdBu', alpha=0.5, angles = 'xy', scale_units = 'dots', scale = 1/arrow_len_in)
+                aspect  = ax.get_data_ratio()
+                cmap    = sns.dark_palette("#69d", reverse=True, as_cmap=True)
+
+                ax.quiver(T, P, dx_norm, dy_norm, magnitude, cmap = cmap, alpha=0.5, angles = 'xy', scale_units = 'dots', scale = 1/arrow_len_in)
                     
             # Formatting
             ax.set_xlabel('Time (t)', fontsize=12)
@@ -102,7 +102,6 @@ def create_diff_eq_demo():
             #ax.grid(True, alpha=0.3)
             ax.legend()
             
-
             ax.set_ylim(y_min, y_max)
             
             plt.tight_layout()
@@ -110,6 +109,7 @@ def create_diff_eq_demo():
             
             # Display key information
             equilibrium = 900
+            
             print(f"\n Analysis:")
             print(f"• Initial condition: p(0) = {p0}")
             print(f"• Equilibrium point: p = {equilibrium}")
@@ -134,18 +134,12 @@ def create_diff_eq_demo():
     
     # Layout
     controls = widgets.VBox([ widgets.HTML("<h3> Controls</h3>"), p0_slider,
-                              show_equilibrium, show_direction_field])
+                              show_equilibrium, show_direction_field ])
     
     # Display everything
-    display(widgets.VBox([
-        widgets.HTML("<h2> Differential Equation Demo: dp/dt = 0.5p - 450</h2>"),
-        controls,
-        output
-    ]))
-    
-    # Initial plot
-    update_plot(p0_slider.value, show_equilibrium.value, show_direction_field.value)
-
+    display(widgets.VBox([ widgets.HTML("<h2> Differential Equation Demo: dp/dt = 0.5p - 450</h2>"),
+                           controls, output ]))
 
 def run_demo():
+    
     create_diff_eq_demo()
