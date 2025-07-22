@@ -12,13 +12,10 @@ warnings.filterwarnings('ignore')
 sns.set_context("notebook", font_scale=1.5, rc={"lines.linewidth": 2.5})
 
 # Set up the differential equation: dp/dt = 0.5*p - 450
-def analytical_solution(t, p0, r=0.5, k=450):
-    '''
-    Analytical solution to dp/dt = r*p - k
-    Solution: p(t) = (p0 - k/r) * exp(r*t) + k/r
-    '''
-    equilibrium = k / r  # 450 / 0.5 = 900
-    return (p0 - equilibrium) * np.exp(r * t) + equilibrium
+def analytical_solution(t, y0 = 0, a = -0.2, b = 9.8):
+
+    eq = b / a 
+    return eq + (y0 - eq)  * np.exp(a * t)
 
 def create_diff_eq_demo():
     '''Create interactive demo for the differential equation'''
@@ -28,20 +25,20 @@ def create_diff_eq_demo():
                                     description='Initial Value (p₀):', style={'description_width': 'initial'},
                                     layout=widgets.Layout(width='400px'))
     
-    show_equilibrium = widgets.Checkbox(value=True, description='Show Equilibrium Line',
-                                        style={'description_width': 'initial'})
+    show_equilibrium     = widgets.Checkbox(value=True, description='Show Equilibrium Line',
+                                            style={'description_width': 'initial'})
     
-    show_direction_field = widgets.Checkbox( value=False, description='Show Direction Field',
-                                             style={'description_width': 'initial'})
+    show_direction_field = widgets.Checkbox(value=False, description='Show Direction Field',
+                                            style={'description_width': 'initial'})
     
     # Output widget for the plot
     output = widgets.Output()
     
-    def update_plot(p0, show_eq, show_field, t_max = 5):
+    def update_plot(p0, show_eq, show_field, t_max = 12):
         """Update the plot based on slider values"""
 
-        y_min = 800
-        y_max = 1000
+        y_min = 0
+        y_max = 100
 
         with output:
             
@@ -129,7 +126,7 @@ def create_diff_eq_demo():
                 print(f"• Population at t={t_max}: {final_value:.1f}")
     
     # Create interactive widget
-    interactive_plot = widgets.interactive( update_plot, p0=p0_slider, t_max= 5,
+    interactive_plot = widgets.interactive( update_plot, p0=p0_slider, t_max= 12,
                                             show_eq=show_equilibrium, show_field=show_direction_field)
     
     # Layout
