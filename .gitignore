@@ -28,3 +28,25 @@ build/
 dist/
 *.egg-info/
 
+# Manim media folder (renders, videos, images, TeX intermediates…)
+media/
+
+# If you’re using manim_tex for LaTeX builds
+manim_tex/
+
+# TeX intermediate files
+*.aux
+*.log
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+
+# Rendered video/image formats
+*.mp4
+*.mov
+*.webm
+*.avi
+*.png
+*.svg
