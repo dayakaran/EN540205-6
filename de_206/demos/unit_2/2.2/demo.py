@@ -1,68 +1,102 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import ipywidgets as widgets
-from IPython.display import display
-import seaborn as sns
-import warnings
+from ipywidgets import interact, FloatSlider
 
-warnings.filterwarnings('ignore')
-sns.set_context('notebook')
+def f(x):
+    return x**3 + 2*x**2 + 2*x + 4
 
-# General solution: y(x) = 1 ± sqrt(x^3 + 2x^2 + 2x + c)
-def solve_custom_solution(x, c, branch="+"):
-    x = np.asarray(x, dtype=float)
-    expr = x**3 + 2*x**2 + 2*x + c
-    sqrt_expr = np.sqrt(expr)
-    if branch == "+":
-        return 1 + sqrt_expr
-    else:
-        return 1 - sqrt_expr
+def plot_branches():
+    x = np.linspace(-4, 2, 400)
+    y_val = f(x)
+    valid = y_val >= 0
 
-def get_particular_solution(y0, x0=0):
-    # y0 = 1 ± sqrt(x0^3 + 2x0^2 + 2x0 + c) → solve for c
-    # (y0 - 1)^2 = x0^3 + 2x0^2 + 2x0 + c → c = (y0 - 1)^2 - (x0^3 + 2x0^2 + 2x0)
-    c = (y0 - 1)**2 - (x0**3 + 2*x0**2 + 2*x0)
-    branch = "+" if y0 >= 1 else "-"
-    return lambda x: solve_custom_solution(x, c, branch=branch)
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.plot(x[valid], 1 + np.sqrt(y_val[valid]), label='y = 1 + √(x³ + 2x² + 2x + 4)', lw=2)
+    ax.plot(x[valid], 1 - np.sqrt(y_val[valid]), label='y = 1 - √(x³ + 2x² + 2x + 4)', lw=2)
 
-def generate_multiple_solutions(ax, x_range, seeds, solution_func, style="--", color="C1", alpha=0.4):
-    x = np.linspace(*x_range, 400)
-    for y in seeds:
-        y_func = solution_func(y)
-        try:
-            y_vals = y_func(x)
-            y_vals = np.where(np.isreal(y_vals), y_vals.real, np.nan)
-            ax.plot(x, y_vals, style, color=color, alpha=alpha)
-        except Exception:
-            continue  # skip if sqrt is invalid (negative inside)
+    x0, y0 = 0, -1
+    ax.plot(x0, y0, 'ro', markersize=8, label='Initial condition y(0) = -1')
+    ax.annotate("Valid solution\nthrough y(0) = -1",
+                xy=(x0, y0), xytext=(x0 + 0.5, y0 + 1.2),
+                arrowprops=dict(arrowstyle='->', lw=2),
+                fontsize=12, color='red')
 
-def interactive_solution_plot(x_range=(-2, 2), y_range=(-5, 5), y0_default=2.0,
-                               seeds=[-2, -1, 0, 2, 4], title="dy/dx = (3x² + 4x + 2) / (2(y - 1))"):
-    xmin, xmax = x_range
-    x = np.linspace(xmin, xmax, 400)
+    ax.set_title('Branches of the Solution and Initial Condition', fontsize=14)
+    ax.set_xlabel('x', fontsize=12)
+    ax.set_ylabel('y', fontsize=12)
+    ax.legend()
+    ax.grid(True)
+    ax.set_ylim(-4, 6)
 
-    fig, ax = plt.subplots(figsize=(6, 4))
-    ax.set_xlim(*x_range)
-    ax.set_ylim(*y_range)
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
-    ax.set_title(title)
+    for spine in ax.spines.values():
+        spine.set_linewidth(2)
+    ax.axhline(0, color='black', lw=1)
+    ax.axvline(0, color='black', lw=1)
 
-    generate_multiple_solutions(ax, x_range, seeds, get_particular_solution)
+    plt.show()
 
-    line, = ax.plot([], [], lw=2, color="C3", label="solution y(x)")
-    ax.legend(loc="upper left")
+def family_plot(C=0):
+    x = np.linspace(-4, 2, 400)
+    rhs = x**3 + 2*x**2 + 2*x + C
+    valid = rhs >= -1
 
-    @widgets.interact(y0=widgets.FloatSlider(min=-3, max=5, step=0.1,
-                                              value=y0_default, description="y(0)="))
-    def _update(y0):
-        y_func = get_particular_solution(y0)
-        y_vals = y_func(x)
-        y_vals = np.where(np.isreal(y_vals), y_vals.real, np.nan)
-        line.set_data(x, y_vals)
-        fig.canvas.draw_idle()
+    y1 = np.zeros_like(x)
+    y2 = np.zeros_like(x)
+    y1[valid] = 1 + np.sqrt(1 + rhs[valid])
+    y2[valid] = 1 - np.sqrt(1 + rhs[valid])
 
-    return fig
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.plot(x[valid], y1[valid], label='y = 1 + √(1 + RHS)', alpha=0.7, lw=2)
+    ax.plot(x[valid], y2[valid], label='y = 1 - √(1 + RHS)', alpha=0.7, lw=2)
+
+    x0, y0 = 0, -1
+    C0 = y0**2 - 2*y0 - (x0**3 + 2*x0**2 + 2*x0)
+    if abs(C - C0) < 0.1:
+        ax.plot(x0, y0, 'ro', markersize=8, label='Initial condition y(0) = -1')
+        ax.annotate("Valid solution\nthrough y(0) = -1",
+                    xy=(x0, y0), xytext=(x0 + 0.5, y0 + 1.2),
+                    arrowprops=dict(arrowstyle='->', lw=2),
+                    fontsize=12, color='red')
+
+    ax.set_title(f'Explicit Solutions for y² - 2y = x³ + 2x² + 2x + C\n(C = {C:.2f})', fontsize=14)
+    ax.set_xlabel('x', fontsize=12)
+    ax.set_ylabel('y', fontsize=12)
+    ax.legend()
+    ax.grid(True)
+    ax.set_ylim(-4, 6)
+
+    for spine in ax.spines.values():
+        spine.set_linewidth(2)
+    ax.axhline(0, color='black', lw=1)
+    ax.axvline(0, color='black', lw=1)
+
+    plt.show()
+
+def implicit_plot(C=3):
+    x = np.linspace(-4, 2, 400)
+    y = np.linspace(-4, 6, 400)
+    X, Y = np.meshgrid(x, y)
+    Z = Y**2 - 2*Y - (X**3 + 2*X**2 + 2*X + C)
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.contour(X, Y, Z, levels=[0], colors='blue')
+
+    ax.set_title(f'Implicit Curve: y² - 2y = x³ + 2x² + 2x + {C:.2f}', fontsize=14)
+    ax.set_xlabel('x', fontsize=12)
+    ax.set_ylabel('y', fontsize=12)
+    ax.grid(True)
+    ax.legend()
+    ax.set_ylim(-4, 6)
+
+    for spine in ax.spines.values():
+        spine.set_linewidth(2)
+    ax.axhline(0, color='black', lw=1)
+    ax.axvline(0, color='black', lw=1)
+
+    plt.show()
 
 def run_demo():
-    interactive_solution_plot()
+    plot_branches()
+    interact(family_plot, C=FloatSlider(value=3, min=-10, max=15, step=0.5))
+    interact(implicit_plot, C=FloatSlider(value=3, min=-10, max=15, step=0.5))
+    

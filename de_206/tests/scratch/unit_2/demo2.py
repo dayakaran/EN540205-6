@@ -22,4 +22,4 @@ def run_demo():
         "dy/dx = (3x^2 + 4x + 2)/(2(y-1))"
     )
     demo.add_initial_condition_slider('y', -1.0, -5, 5, 0.1, 'y(0) = ')
-    demo.create_interactive_demo(50, -15, 15)
+    demo.create_interactive_demo(3, -3, 3)

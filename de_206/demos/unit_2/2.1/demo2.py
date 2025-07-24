@@ -1,4 +1,4 @@
-from abstractions import DifferentialEquation, UniversalDiffEqDemo
+from abstractions.ODESolutions import DifferentialEquation, UniversalDiffEqDemo
 
 # Your specific equation
 class YourEquation(DifferentialEquation):
