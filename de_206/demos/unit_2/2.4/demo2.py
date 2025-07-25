@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 from ipywidgets import interact, FloatText
 
 def signed_pow(x, p):
-    """Return signed power to handle negative bases and real exponents."""
     return np.copysign(np.abs(x)**p, x)
 
 def run_demo():
@@ -12,7 +11,6 @@ def run_demo():
         y0=FloatText(value=1.0, description='initial y', step=0.1)
     )
     def plot_ivp(x0, y0):
-        # Handle constant solution y=0
         if np.isclose(y0, 0):
             x = np.linspace(x0 - 5, x0 + 5, 400)
             y = np.zeros_like(x)
