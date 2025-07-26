@@ -84,13 +84,16 @@ class FallingBall(Scene):
         ))
         # Labels showing t and v
         lin_label = always_redraw(lambda: Text(
-            f"t={t1.get_value():.1f}s, v={v_linear(t1.get_value()):.1f} m/s", font_size=24
+            f"t={t1.get_value():.1f}s, v={v_linear(t1.get_value()):.1f} m/s", font_size=18
         ).next_to(pole_l)).shift(UP)
 
+        eq_l = MathTex(r'\frac{dv}{dt} = 9.8 - 0.2v', font_size = 24, color=WHITE).next_to(pole_l).shift(UP*3)
+        la_l = Text('Linear Case', font_size = 24, color=WHITE).next_to(pole_l).shift(UP*4)
+        
         # Build linear sequence
         self.add(axes_v, axes_v_labels, ground_l, pole_l,
-                 lin_curve, lin_dot, lin_label, ball_lin)
-        self.play(t1.animate.set_value(t_end1), rate_func=linear, run_time=6)
+                 lin_curve, lin_dot, lin_label, ball_lin, eq_l, la_l)
+        self.play(t1.animate.set_value(t_end1), rate_func=linear, run_time=t_end1/5)
         #self.play(FadeOut(VGroup(lin_curve, lin_dot, lin_label, ball_lin)))
         self.play(FadeOut(VGroup(lin_dot)))
 
@@ -102,12 +105,15 @@ class FallingBall(Scene):
             axes_v.c2p(t2.get_value(), v_quad(t2.get_value()))
         ))
         quad_label = always_redraw(lambda: Text(
-            f"t={t2.get_value():.1f}s, v={v_quad(t2.get_value()):.1f} m/s", font_size=24
+            f"t={t2.get_value():.1f}s, v={v_quad(t2.get_value()):.1f} m/s", font_size=18
         ).next_to(pole_q)).shift(UP)
 
+        eq_q = MathTex(r'\frac{dv}{dt} = \frac{49^2 - v^2}{245}', font_size = 24, color=WHITE).next_to(pole_q).shift(UP*3)
+        la_q = Text('Quadratic Case', font_size = 24, color=WHITE).next_to(pole_q).shift(UP*4)
+                
         # Build quadratic sequence
-        self.add(quad_curve, quad_dot, quad_label, ball_quad, ground_q, pole_q)
-        self.play(t2.animate.set_value(t_end2), rate_func=linear, run_time=6)
+        self.add(quad_curve, quad_dot, quad_label, ball_quad, ground_q, pole_q, eq_q, la_q)
+        self.play(t2.animate.set_value(t_end2), rate_func=linear, run_time=t_end2/5)
         #self.play(FadeOut(VGroup(quad_curve, quad_dot, quad_label, ball_quad)))
         #self.play(FadeOut(VGroup(quad_dot, ball_quad)))
 
