@@ -6,18 +6,27 @@ def y_sol(x, x0, y0):
     with np.errstate(divide='ignore', invalid='ignore'):
         return y0 * x0 / x
 
+def get_quadrant(x, y):
+    if x > 0 and y > 0:
+        return "I"
+    elif x < 0 and y > 0:
+        return "II"
+    elif x < 0 and y < 0:
+        return "III"
+    elif x > 0 and y < 0:
+        return "IV"
+    else:
+        return "on an axis"
+
 def run_demo():
     x_min = -2.0
     x_max =  2.0
 
     init_conds = {
         "(-1, 2)":   (-1.0, 2.0),
-        "(-1.5, 1.5)": (-1.5, 1.5),
         "(-0.5, -3)": (-0.5, -3),
         "(1, 2)":     (1.0, 2.0),
         "(0.5, -3)":  (0.5, -3),
-        "(1.5, 1.5)": (1.5, 1.5),
-        "(1.2, 1.0)": (1.2, 1.0),
     }
 
     @interact(
@@ -84,13 +93,16 @@ def run_demo():
                         fontsize=16, color='red', fontweight='bold',
                         ha='left', va='top', zorder=11)
 
+        quad = get_quadrant(x0, y0)
+        ax.set_title(
+            rf"Particular/Initial Value in Quadrant {quad}",
+            fontsize=15, pad=20)
+        ax.legend(loc="lower left", fontsize=12)
+        ax.grid(True, alpha=0.4)
         ax.set_xlim(x_min, x_max)
         ax.set_ylim(-8, 8)
         ax.set_xlabel("$x$", fontsize=14)
         ax.set_ylabel("$y$", fontsize=14)
-        ax.set_title(
-            r"IVP: $\frac{dy}{dx}+\frac{1}{x}y=0$",
-            fontsize=15, pad=20)
-        ax.legend(loc="lower left", fontsize=12)
-        ax.grid(True, alpha=0.4)
         plt.show()
+
+run_demo()
