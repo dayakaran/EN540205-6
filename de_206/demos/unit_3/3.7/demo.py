@@ -1,245 +1,171 @@
-import numpy as np
-import matplotlib.pyplot as plt
+import numpy as np, matplotlib.pyplot as plt, seaborn as sns
 from scipy.integrate import solve_ivp
 from matplotlib.patches import Rectangle
 import ipywidgets as widgets
 from IPython.display import display
-
-import seaborn as sns
 sns.set_context('poster')
-
-import warnings
-warnings.filterwarnings("ignore")
+import warnings; warnings.filterwarnings("ignore")
 
 
 class SpringMassDemo:
-    # --------------------------------------------------------------- init
+    
+    # ───────────────────────────── initialization ────────────────────────────
     def __init__(self):
-        # Default parameters
-        self.m     = 1.0
-        self.gamma = 0.5
-        self.k     = 4.0
-        self.u0    = 1.0
-        self.v0    = 0.0
 
-        # Animation settings
-        self.t_max    = 60.0          # seconds shown on x–axis
-        self.n_frames = 600           # time resolution
-
+        self.m, self.gamma, self.k, self.u0, self.v0 = 1.0, 0.5, 4.0, 1.0, 0.0
+        self.t_max, self.n_frames = 60.0, 600
         self.t_vals = np.linspace(0, self.t_max, self.n_frames)
-        self.solve()                  # integrate ODE & pre-compute limits
-        self.create_widgets()
+        self.solve();  self._create_widgets()
 
-    # ---------------------------------------------------------- ODE solve
+    # ───────────────────────── integrate ODE & cache limits ──────────────────
     def solve(self):
-        def f(t, y):
-            u, v = y
-            return [v, -(self.gamma / self.m) * v - (self.k / self.m) * u]
 
-        sol        = solve_ivp(f, [0, self.t_max], [self.u0, self.v0],
-                               t_eval=self.t_vals, method='RK45')
-        self.u     = sol.y[0]
-        self.v     = sol.y[1]
-        self.a     = -(self.gamma / self.m) * self.v - (self.k / self.m) * self.u
+        f   = lambda t, y: [y[1], -(self.gamma/self.m)*y[1] - (self.k/self.m)*y[0]]
+        sol = solve_ivp(f, [0, self.t_max], [self.u0, self.v0], t_eval=self.t_vals)
 
-        # -------- cache global limits so axes never rescale ---------------
-        self.max_disp = 1.2 * np.max(np.abs(self.u)) if np.max(np.abs(self.u)) > 0 else 1
-        self.max_vel  = 1.2 * np.max(np.abs(self.v)) if np.max(np.abs(self.v)) > 0 else 1
-        self.max_acc  = 1.2 * np.max(np.abs(self.a)) if np.max(np.abs(self.a)) > 0 else 1
+        self.u, self.v = sol.y
+        self.a         = -(self.gamma/self.m)*self.v - (self.k/self.m)*self.u
+
+        self.max_disp = 1.2*np.max(np.abs(self.u)) or 1
+        self.max_vel  = 1.2*np.max(np.abs(self.v)) or 1
+        self.max_acc  = 1.2*np.max(np.abs(self.a)) or 1
         self.max_dv   = max(self.max_vel, self.max_acc)
-        # ------------------------------------------------------------------
 
-    # ------------------------------------------------------- UI elements
-    def create_widgets(self):
-        self.time_slider = widgets.FloatSlider(
-            0, min=0, max=self.t_max,
-            step=self.t_max / (self.n_frames - 1),
-            description="Time (s):", layout=widgets.Layout(width="600px"),
-            style={"description_width": "initial"}, disabled=True
-        )
+    # ───────────────────────────── widget helpers ────────────────────────────
+    def _create_widgets(self):
 
-        self.play_widget = widgets.Play(
-            value=0, min=0, max=self.n_frames - 1, step=1, interval=50
-        )
+        self.time_slider = widgets.FloatSlider(0, min=0, max=self.t_max,
+                                step=self.t_max/(self.n_frames-1),
+                                description='Time (s):', disabled=True,
+                                layout=widgets.Layout(width='600px'),
+                                style={'description_width':'initial'})
+        self.play_widget = widgets.Play(value=0, min=0, max=self.n_frames-1,
+                                        step=1, interval=50)
+        # buttons (keyword args for older ipywidgets)
+        kw = dict(layout=widgets.Layout(width='85px'))
 
-        self.play_btn  = widgets.Button(description="▶ Play",
-                                        button_style="success",
-                                        layout=widgets.Layout(width="85px"))
+        self.play_btn  = widgets.Button(description='▶ Play',  button_style='success', **kw)
+        self.pause_btn = widgets.Button(description='⏸ Pause', button_style='warning', **kw)
+        self.stop_btn  = widgets.Button(description='⏹ Stop',  button_style='danger',  **kw)
+        self.reset_btn = widgets.Button(description='⟲ Reset', button_style='info',    **kw)
 
-        self.pause_btn = widgets.Button(description="⏸ Pause",
-                                        button_style="warning",
-                                        layout=widgets.Layout(width="85px"))
-        
-        self.stop_btn  = widgets.Button(description="⏹ Stop",
-                                        button_style="danger",
-                                        layout=widgets.Layout(width="85px"))
-        
-        self.reset_btn = widgets.Button(description="⟲ Reset",
-                                        button_style="info",
-                                        layout=widgets.Layout(width="85px"))
-        
-        self.play_btn.on_click(lambda *_: setattr(self.play_widget, "playing", True))
-        self.pause_btn.on_click(lambda *_: setattr(self.play_widget, "playing", False))
-        self.stop_btn.on_click(self._on_stop)
-        self.reset_btn.on_click(lambda *_: setattr(self.play_widget, "value", 0))
+        self.play_btn.on_click(lambda *_: setattr(self.play_widget,'playing',True))
+        self.pause_btn.on_click(lambda *_: setattr(self.play_widget,'playing',False))
+        self.stop_btn.on_click(self._stop); self.reset_btn.on_click(lambda *_: setattr(self.play_widget,'value',0))
 
-    def _on_stop(self, *_):
-        self.play_widget.playing = False
-        self.play_widget.value   = 0
+    def _stop(self,*_):
 
-    # ----------------------------------------------- regime diagnostics
-    def _compute_regime_info(self):
-        D     = self.gamma**2 - 4 * self.k * self.m
-        zeta  = self.gamma / (2 * np.sqrt(self.k * self.m))
-        omega0 = np.sqrt(self.k / self.m)
+        self.play_widget.playing=False; self.play_widget.value=0
 
-        info  = {"D": D, "zeta": zeta, "omega0": omega0}
+    # ───────────────────────── regime diagnostics ────────────────────────────
+    def _regime(self):
 
-        if D < 0:
-            omega_d    = np.sqrt(4 * self.k * self.m - self.gamma**2) / (2 * self.m)
-            decay_rate = self.gamma / (2 * self.m)
-            Td         = 2 * np.pi / omega_d
-            A = np.sqrt(
-                    self.u0**2 +
-                    ((self.gamma / (2 * self.m) * self.u0 + self.v0) / omega_d) ** 2
-                )
-            info.update(regime="underdamped", omega_d=omega_d,
-                        decay_rate=decay_rate, Td=Td, A=A)
-        elif np.isclose(D, 0.0):
-            r = -self.gamma / (2 * self.m)
-            info.update(regime="critically damped", r=r)
+        D = self.gamma**2 - 4*self.k*self.m
+        zeta, omega0 = self.gamma/(2*np.sqrt(self.k*self.m)), np.sqrt(self.k/self.m)
+        info = dict(D=D, zeta=zeta, omega0=omega0)
+
+        if   D < 0:
+
+            omega_d = np.sqrt(4*self.k*self.m - self.gamma**2)/(2*self.m)
+            Td, decay = 2*np.pi/omega_d, self.gamma/(2*self.m)
+            A = np.sqrt(self.u0**2 + ((self.gamma/(2*self.m)*self.u0 + self.v0)/omega_d)**2)
+            info.update(regime='underdamped', omega_d=omega_d, Td=Td, decay=decay, A=A)
+
+        elif np.isclose(D,0):
+
+            info.update(regime='critically damped', r=-self.gamma/(2*self.m))
+
         else:
+
             sqrtD = np.sqrt(D)
-            r1    = (-self.gamma + sqrtD) / (2 * self.m)
-            r2    = (-self.gamma - sqrtD) / (2 * self.m)
-            info.update(regime="overdamped", r1=r1, r2=r2)
+            info.update(regime='overdamped',
+                        r1=(-self.gamma+sqrtD)/(2*self.m),
+                        r2=(-self.gamma-sqrtD)/(2*self.m))
+
         return info
+    
+    # ──────────────────────────── main drawing ───────────────────────────────
+    def _update(self, frame_idx):
 
-    # ----------------------------------------------------------- drawing
-    def update_plot(self, frame_idx):
-        idx = int(frame_idx)
-        t   = self.t_vals[idx]
-        u   = self.u[idx]
-        v   = self.v[idx]
-        a   = self.a[idx]
-        self.time_slider.value = t
+        i, t = int(frame_idx), self.t_vals[int(frame_idx)]
+        u, v, a = self.u[i], self.v[i], self.a[i]
+        self.time_slider.value = t; reg = self._regime()
 
-        regime = self._compute_regime_info()
+        fig = plt.figure(figsize=(15,15))
+        gs  = fig.add_gridspec(3,2, height_ratios=[1,1,0.6], hspace=0.75, wspace=0.35)
 
-        fig = plt.figure(figsize=(14, 10))
-        gs  = fig.add_gridspec(2, 2, wspace=0.35, hspace=0.3)
+        # Top-left ▸ spring animation
+        axS = fig.add_subplot(gs[0,0]); axS.set_title('Spring–Mass'); axS.axis('off')
+        axS.set_xlim(-0.5,0.5); axS.set_ylim(-self.max_disp,1.2)
+        spr_x = np.zeros(20); spr_y = np.linspace(1.0, u, 20); spr_x[1::2]=0.05
 
-        # ══════════════ Top-left: spring visual ══════════════
-        ax_spring = fig.add_subplot(gs[0, 0])
-        ax_spring.set_title("Spring–Mass System", fontsize=14)
-        ax_spring.set_xlim(-0.5, 0.5)
-        ax_spring.set_ylim(-self.max_disp, 1.2)
-        ax_spring.axis("off")
+        axS.plot(spr_x, spr_y,'k-',lw=2); axS.add_patch(Rectangle((-0.15,u-0.075),0.3,0.15,fc='red'))
+        axS.text(0,-0.8*self.max_disp, f"m={self.m:.2f}, γ={self.gamma:.2f}, k={self.k:.2f}", ha='center')
 
-        spring_top  = 1.0
-        spring_rest = 0.0
-        spr_x = np.zeros(20)
-        spr_y = np.linspace(spring_top, spring_rest + u, 20)
-        spr_x[1::2] = 0.05
-        ax_spring.plot(spr_x, spr_y, 'k-', lw=2)
-        ax_spring.add_patch(Rectangle((-0.15, spring_rest + u - 0.075),
-                                      0.3, 0.15, fc='red', zorder=10))
-        ax_spring.text(0, -0.75 * self.max_disp,
-                       f"m={self.m:.2f}, γ={self.gamma:.2f}, k={self.k:.2f}\n"
-                       f"u₀={self.u0:.2f}, v₀={self.v0:.2f}",
-                       ha="center", va="top", fontsize=10)
+        # Top-right ▸ displacement
+        axU=fig.add_subplot(gs[0,1]); axU.set_title('Displacement $u(t)$'); axU.grid()
+        axU.set_xlim(0,self.t_max)
+        axU.set_ylim(-self.max_disp,self.max_disp)
+        axU.set_xlabel('t')
+        axU.plot(self.t_vals,self.u,'b--',lw=1)
+        axU.plot(self.t_vals[:i+1],self.u[:i+1],'b-',lw=2)
+        axU.plot(t,u,'bo')
 
-        # ══════════════ Top-right: displacement ══════════════
-        ax_u = fig.add_subplot(gs[0, 1])
-        ax_u.set_title("Displacement $u(t)$", fontsize=14)
-        ax_u.set_xlabel("Time (s)")
-        ax_u.set_ylabel("u")
-        ax_u.set_xlim(0, self.t_max)
-        ax_u.set_ylim(-self.max_disp, self.max_disp)
-        ax_u.grid(True)
+        if reg['regime']=='underdamped':
+            env = reg['A']*np.exp(-reg['decay']*self.t_vals); axU.plot(self.t_vals, env,'k:',alpha=.4); axU.plot(self.t_vals,-env,'k:',alpha=.4)
 
-        ax_u.plot(self.t_vals,       self.u, 'b--', lw=1, label="Solution")
-        ax_u.plot(self.t_vals[:idx+1], self.u[:idx+1], 'b-',  lw=2)
-        ax_u.plot(t, u, 'bo')
+        axU.text(.99,.95,reg['regime'],transform=axU.transAxes,ha='right',va='top',
+                 bbox=dict(boxstyle='round',fc='wheat',alpha=.6))
 
-        # envelope & period markers (underdamped only)
-        if regime["regime"] == "underdamped":
-            decay = regime["decay_rate"]
-            Aenv  = regime["A"]
-            Td    = regime["Td"]
+        # Mid-left ▸ velocity & acceleration
+        axV=fig.add_subplot(gs[1,0]); axV.set_title('Velocity & Accel.'); axV.grid()
+        axV.set_xlim(0,self.t_max)
+        axV.set_ylim(-self.max_dv,self.max_dv)
+        axV.plot(self.t_vals[:i+1],self.v[:i+1],'g-',label='v')
+        axV.plot(self.t_vals[:i+1],self.a[:i+1],'r--',label='a')
+        axV.plot(t,v,'go'); axV.plot(t,a,'ro')
+        axV.set_xlabel('t')
+        axV.legend(fontsize=12)
 
-            env = Aenv * np.exp(-decay * self.t_vals)
-            ax_u.plot(self.t_vals,  env,  'k:', alpha=0.4)
-            ax_u.plot(self.t_vals, -env,  'k:', alpha=0.4)
+        # Mid-right ▸ phase portrait
+        axP=fig.add_subplot(gs[1,1]);
+        axP.set_title('Phase Portrait')
+        axP.set_xlabel('u')
+        axP.set_ylabel('v')
+        axP.set_xlim(-self.max_disp,self.max_disp); axP.set_ylim(-self.max_vel,self.max_vel)
 
-            if Td > 0 and np.isfinite(Td):
-                t0 = np.floor(t / Td) * Td
-                t1 = t0 + Td
-                y_mark = 0.85 * self.max_disp
-                ax_u.axvline(t0, color='purple', ls=':')
-                ax_u.axvline(t1, color='purple', ls=':')
-                ax_u.annotate("", xy=(t1, y_mark), xytext=(t0, y_mark),
-                              arrowprops=dict(arrowstyle='<->',
-                                              color='purple', lw=1.5))
-                ax_u.text((t0+t1)/2, y_mark*1.05, "$T_d$",
-                          ha="center", va="bottom", color="purple", fontsize=11)
+        # quiver field
+        u_field = np.linspace(-self.max_disp,self.max_disp,17)
+        v_field = np.linspace(-self.max_vel,self.max_vel,17)
 
-        # quick regime label in panel corner
-        ax_u.text(0.98, 0.95, regime["regime"].capitalize(),
-                  transform=ax_u.transAxes, ha="right", va="top",
-                  fontsize=10, bbox=dict(boxstyle="round",
-                                         facecolor="wheat", alpha=0.6))
+        U,V     = np.meshgrid(u_field,v_field); dU = V; dV = -(self.gamma/self.m)*V - (self.k/self.m)*U
+        mag     = np.hypot(dU,dV); dU,dV = dU/mag, dV/mag
+        cmap    = sns.dark_palette("#69d",reverse=True,as_cmap=True)
 
-        # ══════════════ Bottom-right: velocity & accel ══════════════
-        ax_va = fig.add_subplot(gs[1, 1])
-        ax_va.set_title("Velocity & Acceleration", fontsize=14)
-        ax_va.set_xlabel("Time (s)")
-        ax_va.set_ylabel("v, a")
-        ax_va.set_xlim(0, self.t_max)
-        ax_va.set_ylim(-self.max_dv, self.max_dv)
-        ax_va.grid(True)
+        axP.quiver(U,V,dU,dV,mag,cmap=cmap,alpha=.4,angles='xy',scale_units='xy',scale=15)
 
-        ax_va.plot(self.t_vals[:idx+1], self.v[:idx+1], 'g-', label="Velocity")
-        ax_va.plot(self.t_vals[:idx+1], self.a[:idx+1], 'r--', label="Acceleration")
-        ax_va.plot(t, v, 'go')
-        ax_va.plot(t, a, 'ro')
-        ax_va.legend(fontsize=9)
+        # trajectory
+        axP.plot(self.u[:i+1],self.v[:i+1],'b')
+        axP.plot(u,v,'ro')
 
-        # ══════════════ Bottom-left: regime summary ══════════════
-        ax_sum = fig.add_subplot(gs[1, 0])
-        ax_sum.set_title("Regime Summary", fontsize=14)
-        ax_sum.axis("off")
+        # Long bottom row ▸ regime summary
+        axR   = fig.add_subplot(gs[2,:]); axR.axis('off')
+        lines = [f"Regime: {reg['regime'].capitalize()}    ζ={reg['zeta']:.2f}"]
 
-        zeta = regime["zeta"]
-        gmax = max(1.5, zeta * 1.2)
-        ax_sum.hlines(0.3, 0, gmax, lw=8, color='lightgray', alpha=0.7)
-        ax_sum.vlines(1.0, 0.22, 0.38, ls='--', color='black')
-        ax_sum.plot([zeta], [0.3], 'o', color='purple')
-        ax_sum.set_xlim(0, gmax)
-        ax_sum.set_ylim(0, 1)
-
-        ax_sum.text(1.0, 0.45, "$\\zeta = 1$ (critical)",
-                    ha="center", va="bottom", fontsize=9)
-        # details
-        details = [f"Regime: {regime['regime']}",
-                   f"ζ = {zeta:.2f}", ""]
-        if regime["regime"] == "underdamped":
-            details += [f"ω₀ = {regime['omega0']:.2f}",
-                        f"ω_d = {regime['omega_d']:.2f}",
-                        f"T_d = {regime['Td']:.2f} s",
-                        f"decay = {regime['decay_rate']:.3f}"]
-        elif regime["regime"] == "critically damped":
-            details += [f"double root r = {regime['r']:.3f}"]
+        if reg['regime']=='underdamped':
+            lines += [f"ω₀={reg['omega0']:.2f}",f"ω_d={reg['omega_d']:.2f}",
+                      f"T_d={reg['Td']:.2f}s",f"decay={reg['decay']:.3f}"]
+        elif reg['regime']=='critically damped':
+            lines += [f"root={reg['r']:.3f}"]
         else:
-            details += [f"r1 = {regime['r1']:.3f}",
-                        f"r2 = {regime['r2']:.3f}"]
-        ax_sum.text(0.02, 0.6, "\n".join(details),
-                    ha="left", va="top", family="monospace", fontsize=10)
+            lines += [f"r1={reg['r1']:.3f}",f"r2={reg['r2']:.3f}"]
+
+        axR.text(0.01,0.5,"   ".join(lines),va='center',fontsize=12)
 
         plt.tight_layout()
         plt.show()
 
-    # -------------------------------------------------- main UI assembly
+    # ───────────────────── assemble UI & launch interactive ──────────────────
     def display(self):
 
         param_box = widgets.HBox([
@@ -250,35 +176,26 @@ class SpringMassDemo:
             widgets.BoundedFloatText(value=self.v0,    min=0.0, description="v₀", layout=widgets.Layout(width="90px"), style={"description_width": "25px"}),
         ])
         
-        update_btn = widgets.Button(description="Update Params", button_style="primary")
-
-        def _update_params(_):
-            self.m     = param_box.children[0].value
-            self.gamma = param_box.children[1].value
-            self.k     = param_box.children[2].value
-            self.u0    = param_box.children[3].value
-            self.v0    = param_box.children[4].value
-            self.solve()
-
-        update_btn.on_click(_update_params)
-
-        control_row = widgets.HBox([self.play_btn, self.pause_btn,
-                                    self.stop_btn, self.reset_btn])
+        update_btn = widgets.Button(description='Update Params', button_style='primary')
+        update_btn.on_click(lambda *_: (self._read_params(param_box), self.solve()))
 
         controls = widgets.VBox([param_box, update_btn,
-                                 control_row,
-                                 widgets.HTML("<b>Progress:</b>"),
-                                 self.time_slider])
+                                 widgets.HBox([self.play_btn,self.pause_btn,self.stop_btn,self.reset_btn]),
+                                 widgets.HTML('<b>Progress</b>'), self.time_slider])
 
-        self.play_widget.layout.display = "none"   # hidden but drives the animation
-        display(self.play_widget)
+        self.play_widget.layout.display='none'; display(self.play_widget)
 
-        out = widgets.interactive_output(self.update_plot,
-                                         {"frame_idx": self.play_widget})
+        out = widgets.interactive_output(self._update, {'frame_idx': self.play_widget})
+
         display(controls, out)
+        
+    def _read_params(self,box):
 
+        self.m,self.gamma,self.k,self.u0,self.v0=[w.value for w in box.children]
 
+        
 def run_demo():
+
     demo = SpringMassDemo()
     demo.display()
 
