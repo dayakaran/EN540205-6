@@ -109,20 +109,20 @@ class SecondOrderComplexDemo_ab:
 
     def oscillation_type(self, lam, mu):
         if mu == 0 and lam == 0:
-            return "Stationary equilibrium (constant solution)"
+            return f"Stationary equilibrium\n(constant solution)"
         elif mu == 0:
             if lam > 0:
-                return "Stable node (exponential decay, no oscillation)"
+                return f"Stable node\n(exponential decay, no oscillation)"
             elif lam < 0:
-                return "Unstable node (exponential growth, no oscillation)"
+                return f"Unstable node\n(exponential growth, no oscillation)"
             else:
-                return "Degenerate (constant or linear solution)"
+                return f"Degenerate\n(constant or linear solution)"
         elif lam == 0:
-            return "Pure oscillation (undamped, constant amplitude)"
+            return f"Pure oscillation\n(undamped, constant amplitude)"
         elif lam > 0:
-            return "Damped oscillation (spiral sink, exponential decay)"
+            return f"Damped oscillation\n(spiral sink, exponential decay)"
         else:
-            return "Unstable oscillation (spiral source, exponential growth)"
+            return f"Unstable oscillation\n(spiral source, exponential growth)"
 
     def update_plot(self, frame_idx):
         idx = int(frame_idx)
@@ -181,7 +181,7 @@ class SecondOrderComplexDemo_ab:
         bbox1 = dict(facecolor='white', edgecolor='gray', boxstyle='round,pad=0.9', alpha=0.94)
         bbox2 = dict(facecolor='aliceblue', edgecolor='navy', boxstyle='round,pad=0.8', alpha=0.90)
         ax_info.text(0.000001, 1.08, self.info_str, fontsize=15, va='top', fontfamily='monospace', bbox=bbox1, transform=ax_info.transAxes)
-        ax_info.text(0.41, 1.08, self.osc_str, fontsize=15, color='navy', va='top',
+        ax_info.text(0.50, 1.08, self.osc_str, fontsize=15, color='navy', va='top',
                      fontweight='semibold', fontfamily='sans-serif', 
                      bbox=bbox2, transform=ax_info.transAxes)
 
