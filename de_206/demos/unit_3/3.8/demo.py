@@ -10,7 +10,6 @@ import warnings
 warnings.filterwarnings("ignore")
 
 class ForcedSpringMassDemo:
-    # --------------------------------------------------------------- init
     def __init__(self):
         self.m = 1.0
         self.gamma = 0.5
@@ -21,12 +20,10 @@ class ForcedSpringMassDemo:
         self.omega = 1.0
         self.t_max = 60.0
         self.n_frames = 600
-
         self.t_vals = np.linspace(0, self.t_max, self.n_frames)
         self.solve()
         self.create_widgets()
 
-    # ---------------------------------------------------------- ODE solve
     def solve(self):
         def f(t, y):
             u, v = y
@@ -38,16 +35,12 @@ class ForcedSpringMassDemo:
         self.v = sol.y[1]
         self.force = self.F0 * np.cos(self.omega * self.t_vals)
         self.a = (self.force - self.gamma * self.v - self.k * self.u) / self.m
-
-        # -------- cache global limits so axes never rescale ---------------
         self.max_disp = 1.2 * np.max(np.abs(self.u)) if np.max(np.abs(self.u)) > 0 else 1
         self.max_vel  = 1.2 * np.max(np.abs(self.v)) if np.max(np.abs(self.v)) > 0 else 1
         self.max_acc  = 1.2 * np.max(np.abs(self.a)) if np.max(np.abs(self.a)) > 0 else 1
         self.max_force = 1.2 * np.max(np.abs(self.force)) if np.max(np.abs(self.force)) > 0 else 1
         self.max_dv   = max(self.max_vel, self.max_acc, self.max_force)
-        # ------------------------------------------------------------------
 
-    # ------------------------------------------------------- UI elements
     def create_widgets(self):
         self.time_slider = widgets.FloatSlider(
             0, min=0, max=self.t_max,
@@ -79,14 +72,11 @@ class ForcedSpringMassDemo:
         self.play_widget.playing = False
         self.play_widget.value   = 0
 
-    # ----------------------------------------------- regime diagnostics
     def _compute_regime_info(self):
         D     = self.gamma**2 - 4 * self.k * self.m
         zeta  = self.gamma / (2 * np.sqrt(self.k * self.m))
         omega0 = np.sqrt(self.k / self.m)
-
         info  = {"D": D, "zeta": zeta, "omega0": omega0}
-
         if D < 0:
             omega_d    = np.sqrt(4 * self.k * self.m - self.gamma**2) / (2 * self.m)
             decay_rate = self.gamma / (2 * self.m)
@@ -103,7 +93,25 @@ class ForcedSpringMassDemo:
             info.update(regime="overdamped", r1=r1, r2=r2)
         return info
 
-    # ----------------------------------------------------------- drawing
+    def _draw_jagged_spring(self, ax, spring_top, spring_rest, u):
+        n_points = 21
+        spring_x = np.zeros(n_points)
+        spring_y = np.linspace(spring_top, spring_rest + u, n_points)
+        width = 0.08
+        for i in range(1, n_points - 1):
+            if i % 2 == 1:
+                spring_x[i] = width
+            else:
+                spring_x[i] = -width
+        spring_x[0] = 0
+        spring_x[-1] = 0
+        ax.plot(spring_x, spring_y, 'k-', lw=2, zorder=2)
+        mass_width = 0.3
+        mass_height = 0.15
+        y_mass = spring_rest + u
+        ax.add_patch(Rectangle((-mass_width/2, y_mass - mass_height/2),
+                               mass_width, mass_height, fc='red', zorder=10))
+
     def update_plot(self, frame_idx):
         idx = int(frame_idx)
         t   = self.t_vals[idx]
@@ -112,33 +120,24 @@ class ForcedSpringMassDemo:
         a   = self.a[idx]
         f   = self.force[idx]
         self.time_slider.value = t
-
         regime = self._compute_regime_info()
         fig = plt.figure(figsize=(14, 10))
         gs  = fig.add_gridspec(2, 2, wspace=0.35, hspace=0.44)
 
-        # ══════════════ Top-left: spring visual ══════════════
         ax_spring = fig.add_subplot(gs[0, 0])
         ax_spring.set_title("Spring–Mass System", fontsize=14)
         ax_spring.set_xlim(-0.5, 0.5)
-        ax_spring.set_ylim(-self.max_disp, 1.2)
-        ax_spring.axis("off")
-
         spring_top  = 1.0
         spring_rest = 0.0
-        spr_x = np.zeros(20)
-        spr_y = np.linspace(spring_top, spring_rest + u, 20)
-        spr_x[1::2] = 0.05
-        ax_spring.plot(spr_x, spr_y, 'k-', lw=2)
-        ax_spring.add_patch(Rectangle((-0.15, spring_rest + u - 0.075),
-                                      0.3, 0.15, fc='red', zorder=10))
+        ax_spring.set_ylim(-self.max_disp, 1.2)
+        ax_spring.axis("off")
+        self._draw_jagged_spring(ax_spring, spring_top, spring_rest, u)
         ax_spring.text(0, -0.75 * self.max_disp,
                        f"m={self.m:.2f}, γ={self.gamma:.2f}, k={self.k:.2f}\n"
                        f"u₀={self.u0:.2f}, v₀={self.v0:.2f}\n"
                        f"F₀={self.F0:.2f}, ω={self.omega:.2f}",
                        ha="center", va="top", fontsize=10)
 
-        # ══════════════ Top-right: displacement ══════════════
         ax_u = fig.add_subplot(gs[0, 1])
         ax_u.set_title("Displacement $u(t)$ & Forcing", fontsize=14)
         ax_u.set_xlabel("Time", fontsize=14)
@@ -153,8 +152,6 @@ class ForcedSpringMassDemo:
         ax_u.legend(fontsize=10, ncol=2)
         ax_u.text(0.97, 0.94, regime["regime"].capitalize(), transform=ax_u.transAxes,
                   ha="right", va="top", fontsize=10, bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.6))
-
-        # ======= Period marker for driving frequency =======
         Tdrive = 2 * np.pi / self.omega if self.omega > 0 else 0
         if Tdrive > 0 and np.isfinite(Tdrive) and t > Tdrive:
             t0 = np.floor(t / Tdrive) * Tdrive
@@ -166,9 +163,7 @@ class ForcedSpringMassDemo:
                           arrowprops=dict(arrowstyle='<->', color='purple', lw=1.5))
             ax_u.text((t0+t1)/2, y_mark*1.05, "$T_{\mathrm{drive}}$",
                       ha="center", va="bottom", color="purple", fontsize=11)
-        # ================================================
 
-        # ══════════════ Bottom-right: velocity & accel ══════════════
         ax_va = fig.add_subplot(gs[1, 1])
         ax_va.set_title("Velocity, Acceleration, Force", fontsize=14)
         ax_va.set_xlabel("Time", fontsize=14)
@@ -184,7 +179,6 @@ class ForcedSpringMassDemo:
         ax_va.plot(t, f, 'mo')
         ax_va.legend(fontsize=9)
 
-        # ══════════════ Bottom-left: regime summary ══════════════
         ax_sum = fig.add_subplot(gs[1, 0])
         ax_sum.set_title("Resonance & Regime Diagnostic", fontsize=14)
         ax_sum.axis("off")
@@ -192,7 +186,6 @@ class ForcedSpringMassDemo:
         omega0 = regime["omega0"]
         omega_drive = self.omega
         omega_max = max(1.2 * omega0, 1.2 * omega_drive, 2.5)
-
         ax_sum.hlines(0.3, 0, omega_max, lw=8, color='lightgray', alpha=0.7)
         ax_sum.plot([omega0], [0.3], 'o', color='purple')
         ax_sum.text(omega0, 0.38, "$\omega_0$", ha="center", va="bottom", fontsize=11, color='purple')
@@ -200,7 +193,6 @@ class ForcedSpringMassDemo:
         ax_sum.text(omega_drive, 0.22, "$\omega$", ha="center", va="top", fontsize=11, color='red')
         ax_sum.set_xlim(0, omega_max)
         ax_sum.set_ylim(0, 1)
-
         if zeta < 1:
             omega_res = np.sqrt(self.k / self.m - (self.gamma/(2*self.m))**2)
             ax_sum.text(0.01, 0.8, f"RES. freq (theoretical): ω ≈ {omega_res:.2f}", color="blue", fontsize=11)
@@ -208,11 +200,9 @@ class ForcedSpringMassDemo:
         details = [f"ζ = {zeta:.2f}", f"γ = {self.gamma:.2f}"]
         ax_sum.text(0.01, 0.5, "\n".join(details), fontsize=10)
         ax_sum.text(0.01, 0.1, "Try ω ≈ ω₀ to see resonance!", fontsize=9, style='italic', color='purple')
-
         plt.tight_layout()
         plt.show()
 
-    # -------------------------------------------------- main UI assembly
     def display(self):
         style = {"description_width": "30px"}
         param_box = widgets.HBox([
@@ -225,7 +215,6 @@ class ForcedSpringMassDemo:
             widgets.BoundedFloatText(value=self.omega, min=0., max=6,  description="ω", layout=widgets.Layout(width="90px"), style=style),
         ])
         update_btn = widgets.Button(description="Update Params", button_style="primary")
-
         def _update_params(_):
             self.m = param_box.children[0].value
             self.gamma = param_box.children[1].value
@@ -235,12 +224,10 @@ class ForcedSpringMassDemo:
             self.F0 = param_box.children[5].value
             self.omega = param_box.children[6].value
             self.solve()
-
         update_btn.on_click(_update_params)
         control_row = widgets.HBox([self.play_btn, self.pause_btn, self.stop_btn, self.reset_btn])
         controls = widgets.VBox([param_box, update_btn, control_row,
                                  widgets.HTML("<b>Progress:</b>"), self.time_slider])
-
         self.play_widget.layout.display = "none"
         display(self.play_widget)
         out = widgets.interactive_output(self.update_plot, {"frame_idx": self.play_widget})
