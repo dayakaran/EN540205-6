@@ -1,0 +1,15 @@
+libcairo2-dev
+libjpeg-dev
+libgif-dev
+libpango1.0-dev
+texlive-base
+texlive-binaries
+texlive-fonts-recommended
+texlive-latex-base
+texlive-latex-extra
+texlive-latex-recommended
+texlive-pictures
+texlive-plain-generic
+texlive-xetex
+dvisvgm
+dvipng
