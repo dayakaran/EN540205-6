@@ -8,7 +8,9 @@ sns.set_context('poster')
 import warnings; warnings.filterwarnings("ignore")
 
 class SecondOrderComplexDemo_Particular313:
+
     def __init__(self):
+
         self.a = 5.0
         self.b = 6.0
         self.y0 = 2.0
@@ -20,13 +22,16 @@ class SecondOrderComplexDemo_Particular313:
         self.create_widgets()
     
     def solve(self):
+
         a = self.a
         b = self.b
         def f(t, Y):
             y, yp = Y
             return [yp, -a*yp - b*y]
         self.t = np.linspace(0, self.t_max, self.n_points)
+
         sol = solve_ivp(f, [0, self.t_max], [self.y0, self.yp0], t_eval=self.t)
+
         self.y = sol.y[0]
         self.yp = sol.y[1]
         self.ypp = -a * self.yp - b * self.y
@@ -35,11 +40,13 @@ class SecondOrderComplexDemo_Particular313:
         self.max_yp = 1.2 * np.max(np.abs(self.yp)) or 1
         self.max_ypp = 1.2 * np.max(np.abs(self.ypp)) or 1
         self.max_y_dyn = max(self.max_yp, self.max_ypp, 1)
+
         if hasattr(self, 'time_slider'):
             self.time_slider.max = self.t_max
             self.time_slider.step = self.t_max / (self.n_points - 1)
 
     def create_widgets(self):
+
         self.y0_w = widgets.BoundedFloatText(
             value=self.y0, min=-12, max=12, step=0.05, description="y(0):",
             layout=widgets.Layout(width="150px"))
@@ -72,6 +79,7 @@ class SecondOrderComplexDemo_Particular313:
         )
         
     def get_particular_solution_str(self):
+
         r1 = -2
         r2 = -3
         y0 = self.y0
@@ -92,6 +100,7 @@ class SecondOrderComplexDemo_Particular313:
         return gen_sol
     
     def update_plot(self, frame_idx):
+
         idx = int(frame_idx)
         if idx < 1: idx = 1
         t = self.t[:idx]
@@ -101,7 +110,7 @@ class SecondOrderComplexDemo_Particular313:
         self.time_slider.step = self.t_max / (self.n_points - 1)
         self.time_slider.value = t[-1]
         import matplotlib.gridspec as gridspec
-        fig = plt.figure(figsize=(14.5, 7.5))
+        fig = plt.figure(figsize=(10, 8))
         gs = gridspec.GridSpec(2, 2, height_ratios=[1.2, 0.92])
 
         ax0 = fig.add_subplot(gs[0,0])

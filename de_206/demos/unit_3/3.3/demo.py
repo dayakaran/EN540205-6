@@ -3,13 +3,21 @@ import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
 import ipywidgets as widgets
 from IPython.display import display
+
 import seaborn as sns
-sns.set_context('poster')
+
+sns.set_context('notebook')
+sns.set_theme(rc={"axes.grid": False})
+sns.set_style("white", {'xtick.direction': 'in', 'ytick.direction': 'in'})
+
+
 import warnings
 warnings.filterwarnings("ignore")
 
 class SecondOrderComplexDemo_ab:
+
     def __init__(self):
+
         self.a = 0.0
         self.b = 9.0
         self.y0 = 1.0
@@ -22,12 +30,14 @@ class SecondOrderComplexDemo_ab:
         self.create_widgets()
         
     def calculate_lam_mu(self):
+
         self.lam = -self.a / 2
         sq = self.b - self.lam**2
         self.mu = np.sqrt(sq) if sq >= 0 else 0.0
         self._mu_was_real = sq >= 0
 
     def solve(self):
+
         self.calculate_lam_mu()
         a = self.a
         b = self.b
@@ -49,6 +59,7 @@ class SecondOrderComplexDemo_ab:
             self.time_slider.step = self.t_max / (self.n_points - 1)
         
     def create_widgets(self):
+
         self.a_w = widgets.BoundedFloatText(
             value=self.a, min=-8, max=8, step=0.01, description="a (-2λ):", 
             layout=widgets.Layout(width="170px"))
@@ -67,12 +78,14 @@ class SecondOrderComplexDemo_ab:
 
         self.update_btn = widgets.Button(description="Update Params", button_style="primary", layout=widgets.Layout(width="180px"))
         def _update_params(_):
+
             self.a = self.a_w.value
             self.b = self.b_w.value
             self.y0 = self.y0_w.value
             self.yp0 = self.yp0_w.value
             self.t_max = self.tmax_w.value
             self.solve()
+
         self.update_btn.on_click(_update_params)
         
         self.time_slider = widgets.FloatSlider(
@@ -83,8 +96,66 @@ class SecondOrderComplexDemo_ab:
             style={"description_width": "initial"},
             disabled=True
         )
+
+    def _plot_phase_with_quiver(self, ax, t_now, y_path, yp_path):
+        
+        """Phase portrait with direction field (quiver) + trajectory."""
+
+        a, b = self.a, self.b
+
+        # Axes styling
+        ax.set_title(r"Phase Portrait $(y,\;y')$")
+        ax.set_xlabel("$y$")
+        ax.set_ylabel("$y'$")
+        ax.set_xlim(-self.max_y,  self.max_y)
+        ax.set_ylim(-self.max_yp, self.max_yp)
+        ax.grid(True, alpha=0.45)
+
+
+        # ----- Direction field (ColorBrewer sequential map) -----
+        # Grid
+        u_field = np.linspace(-self.max_y,  self.max_y,  17)
+        v_field = np.linspace(-self.max_yp, self.max_yp, 17)
+        U, V = np.meshgrid(u_field, v_field)
+
+        # Vector field from system: y' = v,  v' = -a v - b y
+        dU = V
+        dV = -(a * V) - (b * U)
+
+        # Normalize to unit vectors for direction arrows
+        mag = np.hypot(dU, dV)
+        mag_safe = np.where(mag == 0, 1.0, mag)
+        dU_n = dU / mag_safe
+        dV_n = dV / mag_safe
+
+        # Color by magnitude (use a ColorBrewer map; try 'YlGnBu' or 'OrRd')
+        cmap    = sns.dark_palette("#69d",reverse=True,as_cmap=True)
+        
+        ax.quiver(
+            U, V, dU_n, dV_n, mag, cmap=cmap, alpha=0.45,
+            angles="xy", scale_units="xy", scale=10
+        )
+
+        # ----- Trajectory (ColorBrewer qualitative palette for lines) -----
+        cb = plt.get_cmap("Dark2")  # ColorBrewer qualitative
+        C_PATH = cb(0)              # teal for active path
+        C_REF  = cb(7)              # gray for reference
+
+        # Full reference curve (dashed), then animated partial curve
+        ax.plot(self.y,  self.yp,  ls="--", lw=1, color=C_REF)
+        ax.plot(y_path, yp_path,   lw=1.8, color=C_PATH)
+        if len(y_path) > 0:
+            ax.plot(y_path[-1], yp_path[-1], "o", color=cb(5))  # end marker
+
+        # Keep square panel (if caller didn’t set box_aspect)
+        try:
+            ax.set_box_aspect(1)
+        except Exception:
+            pass
+
         
     def get_regime_strings(self):
+
         a, b = self.a, self.b
         lam = self.lam
         mu  = self.mu
@@ -108,6 +179,7 @@ class SecondOrderComplexDemo_ab:
         return info_string, "Oscillation type:\n" + osc_type
 
     def oscillation_type(self, lam, mu):
+
         if mu == 0 and lam == 0:
             return f"Stationary equilibrium\n(constant solution)"
         elif mu == 0:
@@ -124,71 +196,80 @@ class SecondOrderComplexDemo_ab:
         else:
             return f"Unstable oscillation\n(spiral source, exponential growth)"
 
+        
     def update_plot(self, frame_idx):
+
         idx = int(frame_idx)
-        t = self.t[:idx]
-        y = self.y[:idx]
-        yp = self.yp[:idx]
+        t   = self.t[:idx]
+        y   = self.y[:idx]
+        yp  = self.yp[:idx]
         ypp = self.ypp[:idx]
-        if len(t) > 0:
-            self.time_slider.value = t[-1]
-        else:
-            self.time_slider.value = 0.0
+        self.time_slider.value = t[-1] if len(t) > 0 else 0.0
 
-        fig, axs = plt.subplots(4, 1, figsize=(12, 15), 
-                               gridspec_kw={'height_ratios': [1.2, 1, 1, 0.9]})
+        # ColorBrewer qualitative palette for curves
+        cb = plt.get_cmap("Dark2")
+        C_Y     = cb(0)  # y(t) active
+        C_REF   = cb(7)  # reference gray
+        C_VEL   = cb(1)  # y'(t)
+        C_ACC   = cb(2)  # y''(t)
+        C_PT    = cb(5)  # point marker
 
-        ax_y = axs[0]
-        ax_y.set_title(f"Solution $y(t)$, $y(0)$={self.y0:.2f}, $y'(0)$={self.yp0:.2f}", fontsize=17)
+        # ===== 2×2 layout with identical square panels =====
+        fig, axes = plt.subplots(
+            2, 2, figsize=(9, 9),
+            subplot_kw={"box_aspect": 1}  # squares, independent of data scale
+        )
+        ax_y, ax_phase = axes[0, 0], axes[0, 1]
+        ax_dy, ax_info  = axes[1, 0], axes[1, 1]
+
+        # --- Top-left: y(t)
+        ax_y.set_title(r"Solution $y(t)$", pad = 10)
         ax_y.set_xlim(self.t[0], self.t[-1])
         ax_y.set_ylim(-self.max_y, self.max_y)
         ax_y.set_xlabel("Time")
         ax_y.set_ylabel("$y(t)$")
         ax_y.grid(True, alpha=0.4)
-        ax_y.plot(self.t, self.y, 'b--', lw=1)
-        ax_y.plot(t, y, 'b-', lw=2)
-        if len(t) > 0:
-            ax_y.plot(t[-1], y[-1], 'bo')
+        #ax_y.plot(self.t, self.y, ls="--", lw=1, color=C_REF)
+        ax_y.plot(t, y, lw=2, color=C_Y)
 
-        ax_dy = axs[1]
-        ax_dy.set_title("Velocity $y'(t)$ (green) and Acceleration $y''(t)$ (red)", fontsize=16)
+        if len(t) > 0:
+            ax_y.plot(t[-1], y[-1], "o", color=C_PT)
+
+        # --- Top-right: Phase portrait with quiver field
+        self._plot_phase_with_quiver(ax_phase, t, y, yp)
+
+        # --- Bottom-left: velocity & acceleration
+        ax_dy.set_title(r"Velocity $y'(t)$ and Accel. $y''(t)$", pad = 10)
         ax_dy.set_xlim(self.t[0], self.t[-1])
         ax_dy.set_ylim(-self.max_y_dyn, self.max_y_dyn)
         ax_dy.set_xlabel("Time")
-        ax_dy.set_ylabel("")
         ax_dy.grid(True, alpha=0.4)
-        ax_dy.plot(t, yp, 'g-', label="$y'(t)$")
-        ax_dy.plot(t, ypp, 'r--', label="$y''(t)$")
+        ax_dy.plot(t, yp,  lw=2, color=C_VEL, label=r"$y'(t)$")
+        ax_dy.plot(t, ypp, lw=2, ls="--", color=C_ACC, label=r"$y''(t)$")
         if len(t) > 0:
-            ax_dy.plot(t[-1], yp[-1], 'go')
-            ax_dy.plot(t[-1], ypp[-1], 'ro')
+            ax_dy.plot(t[-1], yp[-1],  "o", color=C_VEL)
+            ax_dy.plot(t[-1], ypp[-1], "o", color=C_ACC)
         ax_dy.legend(fontsize=11)
 
-        ax_phase = axs[2]
-        ax_phase.set_title("Phase Portrait $(y,\, y')$", fontsize=16)
-        ax_phase.set_xlim(-self.max_y, self.max_y)
-        ax_phase.set_ylim(-self.max_yp, self.max_yp)
-        ax_phase.set_xlabel("$y$")
-        ax_phase.set_ylabel("$y'$")
-        ax_phase.grid(True, alpha=0.45)
-        ax_phase.plot(self.y, self.yp, 'k--', lw=1)
-        ax_phase.plot(y, yp, 'b-', lw=1.7)
-        if len(t) > 0:
-            ax_phase.plot(y[-1], yp[-1], 'bo')
-
-        ax_info = axs[3]
+        # --- Bottom-right: regime summary
+        ax_info.set_title("Regime summary", pad = 10)
         ax_info.axis("off")
-        bbox1 = dict(facecolor='white', edgecolor='gray', boxstyle='round,pad=0.9', alpha=0.94)
-        bbox2 = dict(facecolor='aliceblue', edgecolor='navy', boxstyle='round,pad=0.8', alpha=0.90)
-        ax_info.text(0.000001, 1.08, self.info_str, fontsize=15, va='top', fontfamily='monospace', bbox=bbox1, transform=ax_info.transAxes)
-        ax_info.text(0.50, 1.08, self.osc_str, fontsize=15, color='navy', va='top',
-                     fontweight='semibold', fontfamily='sans-serif', 
-                     bbox=bbox2, transform=ax_info.transAxes)
+        bbox1 = dict(facecolor="white",    edgecolor="0.7",  boxstyle="round,pad=0.9", alpha=0.96)
+        bbox2 = dict(facecolor="#eaf2fb",  edgecolor="navy", boxstyle="round,pad=0.8", alpha=0.93)
+        ax_info.text(0.02, 0.9, self.info_str, fontsize=11, va="top",
+                     fontfamily="monospace", bbox=bbox1, transform=ax_info.transAxes)
+        ax_info.text(0.02, 0.3, self.osc_str, fontsize=11, color="navy", va="top",
+                     fontweight="semibold", fontfamily="sans-serif", bbox=bbox2,
+                     transform=ax_info.transAxes)
 
-        plt.tight_layout(h_pad=3.0)
+        plt.tight_layout()
         plt.show()
+        plt.close(fig)
 
+        
+        
     def display(self):
+
         param_box = widgets.VBox([
             widgets.HBox([self.a_w, self.b_w, self.y0_w, self.yp0_w, self.tmax_w]),
             self.update_btn
@@ -197,10 +278,10 @@ class SecondOrderComplexDemo_ab:
             value=0, min=0, max=self.n_points-1, step=1, interval=15, description="", disabled=False
         )
         play_widget.layout.display = "none"
-        play_btn = widgets.Button(description="▶ Play", button_style="success", layout=widgets.Layout(width="85px"))
+        play_btn  = widgets.Button(description="▶ Play",  button_style="success", layout=widgets.Layout(width="85px"))
         pause_btn = widgets.Button(description="⏸ Pause", button_style="warning", layout=widgets.Layout(width="85px"))
-        stop_btn = widgets.Button(description="⏹ Stop", button_style="danger", layout=widgets.Layout(width="85px"))
-        reset_btn = widgets.Button(description="⟲ Reset", button_style="info", layout=widgets.Layout(width="85px"))
+        stop_btn  = widgets.Button(description="⏹ Stop",  button_style="danger",  layout=widgets.Layout(width="85px"))
+        reset_btn = widgets.Button(description="⟲ Reset", button_style="info",    layout=widgets.Layout(width="85px"))
         play_btn.on_click(lambda *_: setattr(play_widget, "playing", True))
         pause_btn.on_click(lambda *_: setattr(play_widget, "playing", False))
         stop_btn.on_click(lambda *_: (setattr(play_widget, "playing", False), setattr(play_widget, "value", 0)))
@@ -219,6 +300,8 @@ class SecondOrderComplexDemo_ab:
         ])
         display(vbox)
 
+        
 def run_demo():
+
     demo = SecondOrderComplexDemo_ab()
     demo.display()
