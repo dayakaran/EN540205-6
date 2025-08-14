@@ -417,9 +417,7 @@ def generate_animation(output_area):
             if captured_errors.getvalue():
                 print("\nError details:")
                 print(captured_errors.getvalue())
-                
-    display(output_area)
-                
+    
 def make_movie():
     generate_button = widgets.Button(
         description ='Generate Animation',
@@ -431,3 +429,4 @@ def make_movie():
     output_area = widgets.Output()
     generate_button.on_click(lambda x: generate_animation(output_area))
     display(generate_button)
+    display(output_area)
