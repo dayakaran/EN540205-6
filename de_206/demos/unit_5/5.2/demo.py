@@ -138,5 +138,3 @@ class SeriesSolutionPlayDemo:
 def run_demo():
     demo = SeriesSolutionPlayDemo()
     demo.display()
-
-run_demo()
