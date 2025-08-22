@@ -105,7 +105,7 @@ class ODEFamilySweep(Scene):
         self.wait(2)
 
 def gen_movie(scene_class=ODEFamilySweep, scene_name="ODEFamilySweep",
-              config_overrides={'quality':'low_quality'},
+              config_overrides={'quality':'high_quality'},
               render_kwargs=None, scene_kwargs=None, embed_width=820, embed_height=600):
     config_overrides["pixel_width"]  = embed_width
     config_overrides["pixel_height"] = embed_height

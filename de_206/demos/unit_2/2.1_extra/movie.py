@@ -113,6 +113,11 @@ def gen_movie(scene_class, scene_name=None,
     return Video(video_path, embed=True, width=embed_width, height=embed_height)
 
 
+# Example Usage:
+# make_movie_1()
+# make_movie_2(a0_values = [-1.2, -1.0, -0.9, -0.85, -0.8, -0.75, -0.7])
+# make_movie_2(a0_values=[-0.8])
+
 
 """from manim import *
 import numpy as np
