@@ -144,9 +144,6 @@ def create_diff_eq_demo():
     # Display everything
     display(widgets.VBox([ controls, output ]))
 
-    #display(widgets.VBox([ widgets.HTML("<h2> Differential Equation Demo: $$dp/dt = 0.5p - 450$$</h2>"),
-    #                       controls, output ]))
-
 def run_demo():
     
     create_diff_eq_demo()
