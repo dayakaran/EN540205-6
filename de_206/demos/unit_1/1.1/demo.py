@@ -28,11 +28,9 @@ def create_diff_eq_demo():
                                     description='Initial Value (p₀):', style={'description_width': 'initial'},
                                     layout=widgets.Layout(width='400px'))
     
-    show_equilibrium = widgets.Checkbox(value=True, description='Show Equilibrium Line',
-                                        style={'description_width': 'initial'})
+    show_equilibrium = widgets.Checkbox(value=True, description='Show Equilibrium Line', style={'description_width': 'initial'})
     
-    show_direction_field = widgets.Checkbox( value=False, description='Show Direction Field',
-                                             style={'description_width': 'initial'})
+    show_direction_field = widgets.Checkbox( value=False, description='Show Direction Field', style={'description_width': 'initial'})
     
     # Output widget for the plot
     output = widgets.Output()
@@ -133,8 +131,7 @@ def create_diff_eq_demo():
                                             show_eq=show_equilibrium, show_field=show_direction_field)
     
     # Layout
-    controls = widgets.VBox([ widgets.HTML("<h3> Controls</h3>"), p0_slider,
-                              show_equilibrium, show_direction_field ])
+    controls = widgets.VBox([ widgets.HTML("<h3> Controls</h3>"), p0_slider, show_equilibrium, show_direction_field ])
 
     display(HTML(r"""
     <div style="text-align: center; margin-bottom: 15px;">
@@ -146,9 +143,6 @@ def create_diff_eq_demo():
 
     # Display everything
     display(widgets.VBox([ controls, output ]))
-
-    #display(widgets.VBox([ widgets.HTML("<h2> Differential Equation Demo: $$dp/dt = 0.5p - 450$$</h2>"),
-    #                       controls, output ]))
 
 def run_demo():
     

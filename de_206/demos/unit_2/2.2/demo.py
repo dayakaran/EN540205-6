@@ -6,6 +6,7 @@ def f(x):
     return x**3 + 2*x**2 + 2*x + 4
 
 def plot_branches():
+
     x = np.linspace(-4, 2, 400)
     y_val = f(x)
     valid = y_val >= 0
@@ -36,6 +37,7 @@ def plot_branches():
     plt.show()
 
 def family_plot(C=0):
+
     x = np.linspace(-4, 2, 400)
     rhs = x**3 + 2*x**2 + 2*x + C
     valid = rhs >= -1
@@ -73,6 +75,7 @@ def family_plot(C=0):
     plt.show()
 
 def implicit_plot(C=3):
+
     x = np.linspace(-4, 2, 400)
     y = np.linspace(-4, 6, 400)
     X, Y = np.meshgrid(x, y)
@@ -96,6 +99,7 @@ def implicit_plot(C=3):
     plt.show()
 
 def run_demo():
+
     plot_branches()
     interact(family_plot, C=FloatSlider(value=3, min=-10, max=15, step=0.5))
     interact(implicit_plot, C=FloatSlider(value=3, min=-10, max=15, step=0.5))
