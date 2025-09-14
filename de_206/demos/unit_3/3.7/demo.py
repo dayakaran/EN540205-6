@@ -150,11 +150,11 @@ class SpringMassDemo:
 
         # Long bottom row ▸ regime summary
         axR   = fig.add_subplot(gs[2,:]); axR.axis('off')
-        lines = [f"Regime: {reg['regime'].capitalize()}    ζ={reg['zeta']:.2f}"]
+        lines = [f"Regime: {reg['regime'].capitalize()}    ζ= γ/2 √(km) = {reg['zeta']:.2f}"]
 
         if reg['regime']=='underdamped':
             lines += [f"ω₀={reg['omega0']:.2f}",f"ω_d={reg['omega_d']:.2f}",
-                      f"T_d={reg['Td']:.2f}s",f"decay={reg['decay']:.3f}"]
+                      f"T_d={reg['Td']:.2f}s",f"decay=γ/2m={reg['decay']:.3f}"]
         elif reg['regime']=='critically damped':
             lines += [f"root={reg['r']:.3f}"]
         else:
@@ -169,11 +169,11 @@ class SpringMassDemo:
     def display(self):
 
         param_box = widgets.HBox([
-            widgets.BoundedFloatText(value=self.m,     min=0.0, description="m",  layout=widgets.Layout(width="90px"), style={"description_width": "20px"}),
-            widgets.BoundedFloatText(value=self.gamma, min=0.0, description="γ",  layout=widgets.Layout(width="90px"), style={"description_width": "20px"}),
-            widgets.BoundedFloatText(value=self.k,     min=0.0, description="k",  layout=widgets.Layout(width="90px"), style={"description_width": "20px"}),
-            widgets.BoundedFloatText(value=self.u0,    min=0.0, description="u₀", layout=widgets.Layout(width="90px"), style={"description_width": "25px"}),
-            widgets.BoundedFloatText(value=self.v0,    min=0.0, description="v₀", layout=widgets.Layout(width="90px"), style={"description_width": "25px"}),
+            widgets.BoundedFloatText(value=self.m,     min= 0.0, description="m",  layout=widgets.Layout(width="90px"), style={"description_width": "20px"}),
+            widgets.BoundedFloatText(value=self.gamma, min= 0.0, description="γ",  layout=widgets.Layout(width="90px"), style={"description_width": "20px"}),
+            widgets.BoundedFloatText(value=self.k,     min= 0.0, description="k",  layout=widgets.Layout(width="90px"), style={"description_width": "20px"}),
+            widgets.BoundedFloatText(value=self.u0,    min= 0.0, description="u₀", layout=widgets.Layout(width="90px"), style={"description_width": "25px"}),
+            widgets.BoundedFloatText(value=self.v0,    min=-5.0, description="v₀", layout=widgets.Layout(width="90px"), style={"description_width": "25px"}),
         ])
         
         update_btn = widgets.Button(description='Update Params', button_style='primary')
