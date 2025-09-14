@@ -4,6 +4,9 @@ from matplotlib.patches import Rectangle
 from scipy.integrate import solve_ivp
 import ipywidgets as widgets
 from IPython.display import display, clear_output
+import seaborn as sns
+sns.set_context('poster')
+import warnings; warnings.filterwarnings("ignore")
 
 class ForcedSpringMassDemo:
     """
@@ -26,8 +29,8 @@ class ForcedSpringMassDemo:
         self.t_vals = np.linspace(0, self.t_max, self.n_frames)
 
         # Toggle overlays
-        self.show_ss = True
-        self.show_transient = True
+        self.show_ss = False
+        self.show_transient = False
         self._figure_created = False
 
         # First solve and build the UI
