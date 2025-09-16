@@ -141,9 +141,8 @@ class SpringMassDemo:
         U,V     = np.meshgrid(u_field,v_field); dU = V; dV = -(self.gamma/self.m)*V - (self.k/self.m)*U
         mag     = np.hypot(dU,dV); dU,dV = dU/mag, dV/mag
         cmap    = sns.dark_palette("#69d",reverse=True,as_cmap=True)
-
         axP.quiver(U,V,dU,dV,mag,cmap=cmap,alpha=.4,angles='xy',scale_units='xy',scale=15)
-
+        
         # trajectory
         axP.plot(self.u[:i+1],self.v[:i+1],'b')
         axP.plot(u,v,'ro')
