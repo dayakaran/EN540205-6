@@ -152,7 +152,7 @@ class SpringMassDemo:
         lines = [f"Regime: {reg['regime'].capitalize()}    ζ= γ/2 √(km) = {reg['zeta']:.2f}"]
 
         if reg['regime']=='underdamped':
-            lines += [f"ω₀={reg['omega0']:.2f}",f"ω_d={reg['omega_d']:.2f}",
+            lines += [f"ω₀={reg['omega0']:.2f}",f"μ={reg['omega_d']:.2f}",
                       f"T_d={reg['Td']:.2f}s",f"decay=γ/2m={reg['decay']:.3f}"]
         elif reg['regime']=='critically damped':
             lines += [f"root={reg['r']:.3f}"]
