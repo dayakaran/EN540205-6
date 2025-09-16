@@ -96,8 +96,8 @@ class SpringMassDemo:
 
         # Top-left ▸ spring animation
         axS = fig.add_subplot(gs[0,0]); axS.set_title('Spring–Mass'); axS.axis('off')
-        axS.set_xlim(-0.5,0.5); axS.set_ylim(-self.max_disp,1.2)
-        spr_x = np.zeros(20); spr_y = np.linspace(1.0, u, 20); spr_x[1::2]=0.05
+        axS.set_xlim(-0.5,0.5); axS.set_ylim(-self.max_disp,self.max_disp*1.2)
+        spr_x = np.zeros(20); spr_y = np.linspace(self.max_disp*1.2, u, 20); spr_x[1::2]=0.05
 
         axS.plot(spr_x, spr_y,'k-',lw=2); axS.add_patch(Rectangle((-0.15,u-0.075),0.3,0.15,fc='red'))
         axS.text(0,-0.8*self.max_disp, f"m={self.m:.2f}, γ={self.gamma:.2f}, k={self.k:.2f}", ha='center')
@@ -105,7 +105,7 @@ class SpringMassDemo:
         # Top-right ▸ displacement
         axU=fig.add_subplot(gs[0,1]); axU.set_title('Displacement $u(t)$'); axU.grid()
         axU.set_xlim(0,self.t_max)
-        axU.set_ylim(-self.max_disp,self.max_disp)
+        axU.set_ylim(-self.max_disp*1.1,self.max_disp*1.1)
         axU.set_xlabel('t')
         axU.plot(self.t_vals,self.u,'b--',lw=1)
         axU.plot(self.t_vals[:i+1],self.u[:i+1],'b-',lw=2)

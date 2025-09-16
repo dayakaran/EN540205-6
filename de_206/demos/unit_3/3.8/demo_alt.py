@@ -195,7 +195,7 @@ class ForcedSpringMassDemo:
         ax_spring = fig.add_subplot(gs[0, 0])
         ax_spring.set_title("Spring–Mass System", fontsize=14)
         ax_spring.set_xlim(-0.5, 0.5)
-        ax_spring.set_ylim(-self.max_disp, 1.2)
+        ax_spring.set_ylim(-self.max_disp * 1.2, self.max_disp * 1.2)
         ax_spring.axis("off")
 
         # Draw spring
@@ -205,7 +205,11 @@ class ForcedSpringMassDemo:
         width = 0.08
         for i in range(1, spring_n - 1):
             spring_x[i] = width if (i % 2 == 1) else -width
-        ax_spring.plot(spring_x, spring_y, "k-", lw=2)
+        #ax_spring.plot(spring_x, spring_y, "k-", lw=2)
+
+        spr_x = np.zeros(20); spr_y = np.linspace(self.max_disp*1.2, u, 20); spr_x[1::2]=0.05
+                
+        ax_spring.plot(spr_x, spr_y, "k-", lw=2)
 
         # Draw mass
         mass_width = 0.3
@@ -257,9 +261,9 @@ class ForcedSpringMassDemo:
         
         # Create quiver field
         n_arrows = 15  # Reduced for better visibility
-        u_field = np.linspace(-self.max_disp * 0.9, self.max_disp * 0.9, n_arrows)
-        v_field = np.linspace(-self.max_vel * 0.9, self.max_vel * 0.9, n_arrows)
-        U, V = np.meshgrid(u_field, v_field)
+        u_field  = np.linspace(-self.max_disp * 1.1, self.max_disp * 1.1, n_arrows)
+        v_field  = np.linspace(-self.max_vel * 1.1, self.max_vel * 1.1, n_arrows)
+        U, V     = np.meshgrid(u_field, v_field)
         
         # For forced oscillator at current time
         force_field = self.F0 * np.cos(self.omega * t)
