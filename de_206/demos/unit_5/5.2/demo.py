@@ -104,10 +104,13 @@ class SeriesSolutionPlayDemo:
 
         ax2 = axes[1]
         ax2.plot(x, error, color='orange', lw=3, label="$|$Series - True$|$")
+        ax2.plot(x[i], error[i], marker='o', color='crimson', ms=10)
+                
         ax2.fill_between(x, 0, error, color='orange', alpha=0.22)
         ax2.set_xlim(self.t_min, self.t_max)
-        ax2.set_ylim(0, max(0.02, np.nanmax(error)*1.13))
+        #ax2.set_ylim(0, max(0.02, np.nanmax(error)*1.13))
         ax2.set_xlabel('x', fontsize=16)
+        ax2.set_yscale('log')
         ax2.set_title("Error vs. $x$", fontsize=16)
         ax2.grid(True, alpha=0.2)
         ax2.legend(fontsize=12, loc='upper left')
