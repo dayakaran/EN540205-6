@@ -15,7 +15,7 @@ class GramSchmidt2D(Scene):
         axes.add_coordinates()
         
         # Title
-        title = Text("Gram-Schmidt Orthogonalization", font_size=36)
+        title = Text("Gram-Schmidt Orthogonalization", font_size=24)
         title.to_edge(UP)
         
         self.play(Create(axes), Write(title))
@@ -46,7 +46,7 @@ class GramSchmidt2D(Scene):
         label_v2 = MathTex(r"\mathbf{v}_2", color=RED).next_to(vec2.get_end(), UP)
         
         # Step 1: Show original vectors
-        step1_text = Text("Step 1: Start with non-orthogonal basis", font_size=24)
+        step1_text = Text("Step 1: Start with non-orthogonal basis", font_size=20)
         step1_text.to_edge(DOWN)
         
         self.play(
@@ -60,7 +60,7 @@ class GramSchmidt2D(Scene):
         
         # Step 2: Normalize v1 to get q1
         self.play(FadeOut(step1_text))
-        step2_text = Text("Step 2: Normalize v₁ to get q₁", font_size=24)
+        step2_text = Text("Step 2: Normalize v₁ to get q₁", font_size=20)
         step2_text.to_edge(DOWN)
         
         # Create unit circle
@@ -101,7 +101,7 @@ class GramSchmidt2D(Scene):
         
         # Step 3: Project v2 onto q1
         self.play(FadeOut(step2_text))
-        step3_text = Text("Step 3: Project v₂ onto q₁", font_size=24)
+        step3_text = Text("Step 3: Project v₂ onto q₁", font_size=20)
         step3_text.to_edge(DOWN)
         
         # Calculate projection
@@ -142,7 +142,7 @@ class GramSchmidt2D(Scene):
         
         # Step 4: Subtract projection to get u2
         self.play(FadeOut(step3_text))
-        step4_text = Text("Step 4: u₂ = v₂ - proj(v₂ onto q₁)", font_size=24)
+        step4_text = Text("Step 4: u₂ = v₂ - proj(v₂ onto q₁)", font_size=20)
         step4_text.to_edge(DOWN)
         
         # Calculate u2
@@ -186,7 +186,7 @@ class GramSchmidt2D(Scene):
             FadeOut(proj_arrow),
             FadeOut(proj_line)
         )
-        step5_text = Text("Step 5: Normalize u₂ to get q₂", font_size=24)
+        step5_text = Text("Step 5: Normalize u₂ to get q₂", font_size=20)
         step5_text.to_edge(DOWN)
         
         # Calculate normalized q2
@@ -229,7 +229,7 @@ class GramSchmidt2D(Scene):
             FadeOut(proj_formula),
             FadeOut(norm_formula_q2)
         )
-        step6_text = Text("Step 6: q₁ and q₂ form an orthonormal basis!", font_size=24)
+        step6_text = Text("Step 6: q₁ and q₂ form an orthonormal basis!", font_size=20)
         step6_text.to_edge(DOWN)
         
         # Add right angle marker
