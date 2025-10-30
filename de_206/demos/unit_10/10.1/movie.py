@@ -2,8 +2,8 @@ import sys
 from io import StringIO
 from contextlib import redirect_stdout, redirect_stderr
 import ipywidgets as widgets
-from IPython.display import display, Video, clear_output
 import os
+
 from manim import *
 import numpy as np
 
@@ -217,10 +217,9 @@ class EigenTransition(Scene):
                        buff=0, max_tip_length_to_length_ratio=0.15, stroke_width=4)
         Av     = Arrow(axes_left.c2p(0,0), axes_left.c2p(1.8,0),
                        color=RED, buff=0, max_tip_length_to_length_ratio=0.15, stroke_width=4)
-
-        v_lab  = MathTex("u",               font_size=24).next_to(v , DOWN, buff=0.15)
-        Av_lab = MathTex("Tu = 2u",         font_size=24).next_to(Av, UP  , buff=0.15)
-        mat_eq = MathTex("Tu = \\lambda u", font_size=28).next_to(axes_left, DOWN, buff=0.6)
+        v_lab  = MathTex("u",            font_size=24).next_to(v , DOWN, buff=0.15)
+        Av_lab = MathTex("Tu = 2u",      font_size=24).next_to(Av, UP  , buff=0.15)
+        mat_eq = MathTex("T u = \\lambda u", font_size=28).next_to(axes_left, DOWN, buff=0.6)
         
         # ---------- RIGHT SIDE (Consistent with [0, π]) ----------
         right_title = Text("Linear Operator Action", font_size=28).move_to(RIGHT_COL + TOP_Y)
@@ -235,8 +234,8 @@ class EigenTransition(Scene):
         ).move_to(RIGHT_COL + AXES_Y)
 
         # Choose u(x) = sin(x) on [0, π]; then L[u] = -u'' = sin(x) (λ = 1)
-        sin_u   = dom_axes.plot(lambda x: np.sin(x), stroke_width=4)
-        Lu      = dom_axes.plot(lambda x: np.sin(x), color=RED, stroke_width=4)
+        sin_u = dom_axes.plot(lambda x: np.sin(x), stroke_width=4)
+        Lu    = dom_axes.plot(lambda x: np.sin(x), color=RED, stroke_width=4)
 
         sin_lab = MathTex(r"u(x)=\sin(x)", font_size=24).next_to(sin_u, DOWN, buff=0.2)
         Lu_lab  = MathTex(r"L[u]=\lambda u \;(\lambda=1)", font_size=24).next_to(Lu, LEFT, buff=0.2)
@@ -271,7 +270,6 @@ class EigenTransition(Scene):
         final_txt.to_edge(DOWN)
         self.play(Write(final_txt))
         self.wait(1)
-        
         # ---------- Z-order fixes ----------
         self.add_foreground_mobjects(v_lab, Av_lab, sin_lab, Lu_lab, final_txt)
         self.play(*[FadeOut(mob) for mob in self.mobjects])
@@ -327,10 +325,13 @@ class EigenTransition(Scene):
                       x_length=3, y_length=1.8, tips=False,
                       axis_config=BLUE_AX).move_to(R_COL + AXES_Y)
 
-        prod_curve = axes_R.plot(lambda x: np.sin(x)*np.sin(2*x), color=PURPLE, stroke_width=4)
+        prod_curve = axes_R.plot(lambda x: np.sin(x)*np.sin(2*x),
+                                 color=PURPLE, stroke_width=4)
 
-        area_pos = axes_R.get_area(prod_curve, x_range=[0,  PI/2], color=GREEN, opacity=0.7)
-        area_neg = axes_R.get_area(prod_curve, x_range=[PI/2, PI], color=RED,   opacity=0.7)
+        area_pos = axes_R.get_area(prod_curve, x_range=[0, PI/2],
+                                   color=GREEN, opacity=0.7)
+        area_neg = axes_R.get_area(prod_curve, x_range=[PI/2, PI],
+                                   color=RED,   opacity=0.7)
 
         prod_lab = MathTex(r"\sin(\pi x/L)\,\sin(2\pi x/L)", font_size=16
                            ).next_to(axes_R, UP, buff=0.1)
@@ -387,64 +388,6 @@ class EigenTransition(Scene):
         #self.play(Create(box_l), Create(box_r))
         self.play(Write(connect_txt))
         self.wait(1)
-
     
-# Function to generate animation with suppressed output
-def generate_animation(output_area):
-
-    output_area.clear_output(wait=True)
-
-    with output_area:
-
-        # Capture and suppress Manim's verbose output
-        captured_output = StringIO()
-        captured_errors = StringIO()
-
-        try:
-
-            with redirect_stdout(captured_output), redirect_stderr(captured_errors):
-
-                config.media_dir = "./media"
-                config.log_to_file = False
-                config.write_to_movie = True
-                config.verbosity = "ERROR"
-                config.progress_bar = 'none'
-
-                scene = EigenTransition()
-                scene.render()
-
-            video_files = []
-            for root, dirs, files in os.walk("./media"):
-                for file in files:
-                    if file.endswith(".mp4") and "EigenTransition" in file:
-                        video_files.append(os.path.join(root, file))
-
-            if video_files:
-                latest_video = max(video_files, key=os.path.getctime)
-                display(Video(latest_video, width=800, height=600))
-            else:
-                print("No video file found. Please check the rendering process.")
-
-        except Exception as e:
-
-            print(f"Error generating animation: {str(e)}")
-            if captured_errors.getvalue():
-                print("\nError details:")
-                print(captured_errors.getvalue())
-
-                
-                
-def make_movie():
-    
-    generate_button = widgets.Button(
-        description ='Generate Animation',
-        disabled = False,
-        button_style ='success',
-        icon = 'play',
-        layout = widgets.Layout(width='200px', height='50px')
-    )
-
-    output_area = widgets.Output()
-    generate_button.on_click(lambda x: generate_animation(output_area))
-    display(generate_button)
-    display(output_area)
+if __name__=='__main__':
+    pass
